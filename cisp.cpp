@@ -105,7 +105,7 @@ private:
 cell addition(const cells& c)
 {
     // parse the value of the first cell as a long integer
-    long n(
+    long long n(
         atol(
             c[0]
             .value
@@ -119,7 +119,7 @@ cell addition(const cells& c)
 
 cell substraction(const cells& c)
 {
-    long n(
+    long long n(
         atol(c[0]
             .value
             .c_str()
@@ -131,7 +131,7 @@ cell substraction(const cells& c)
 
 cell multiplication(const cells& c)
 {
-    long n(1);
+    long long n(1);
     for (cellIterator i = c.begin(); i != c.end(); ++i)
         n *= atol(i->value.c_str());
     return cell(Number, stringify(n));
@@ -139,7 +139,7 @@ cell multiplication(const cells& c)
 
 cell division(const cells& c)
 {
-    long n(
+    long long n(
         atol(
             c[0]
             .value
@@ -152,10 +152,12 @@ cell division(const cells& c)
 
 cell greaterThan(const cells& c)
 {
-    long n(atol(
-        c[0]
-        .value
-        .c_str()));
+    long long n(
+        atol(
+            c[0]
+            .value
+            .c_str()
+    ));
     for (cellIterator i = c.begin() + 1; i != c.end(); ++i)
         if (n <= atol(i->value.c_str()))
             return falseSymbol;
@@ -164,7 +166,7 @@ cell greaterThan(const cells& c)
 
 cell lessThan(const cells& c)
 {
-    long n(
+    long long n(
         atol(
             c[0]
             .value
@@ -178,7 +180,7 @@ cell lessThan(const cells& c)
 
 cell lessOrEqualThan(const cells& c)
 {
-    long n(
+    long long n(
         atol(
             c[0]
             .value
@@ -241,11 +243,16 @@ cell display(const cells& c)
     return NIL;
 }
 
+cell exitCode(const cells& c)
+{
+    exit(0);
+}
+
 // define the bare minimum set of primintives necessary to pass the unit tests
 void addGlobals(environment& env)
 {
     env["nil"] = NIL;   env["False"] = falseSymbol;  env["True"] = trueSymbol;
-    env["display"] = cell(&display);
+    env["display"] = cell(&display); env["exit"] = cell(&exitCode);
     env["append"] = cell(&append);   env["car"] = cell(&car);
     env["cdr"] = cell(&cdr);      env["cons"] = cell(&cons);
     env["length"] = cell(&length);   env["list"] = cell(&list);
