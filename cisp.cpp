@@ -165,6 +165,27 @@ cell division(const cells& c)
     return cell(Number, stringify(n));
 }
 
+cell logicOr(const cells& c) {
+  for (cellIterator i = c.begin(); i != c.end(); ++i)
+    if (i->value != falseSymbol.value)
+      return trueSymbol;
+  return falseSymbol;
+}
+
+cell logicAnd(const cells& c) {
+  for (cellIterator i = c.begin(); i != c.end(); ++i)
+    if (i->value != trueSymbol.value)
+      return falseSymbol;
+  return trueSymbol;
+}
+
+cell logicNot(const cells& c) {
+  if (c[0].value == falseSymbol.value)
+    return trueSymbol;
+  else
+    return falseSymbol;
+}
+
 cell greaterThan(const cells& c)
 {
     long long n(
@@ -302,6 +323,8 @@ void addGlobals(environment& env)
     env[">="] = cell(&greaterOrEqualThan);
     env["="] = cell(&equal); env["symbol?"] = cell(&symbolP);
     env["number?"] = cell(&numberP); env["list?"] = cell(&listP);
+    env["or"] = cell(&logicOr); env["and"] = cell(&logicAnd);
+    env["not"] = cell(&logicNot);
 }
 
 
