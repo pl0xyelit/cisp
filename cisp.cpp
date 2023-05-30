@@ -174,7 +174,7 @@ cell logicOr(const cells& c) {
 
 cell logicAnd(const cells& c) {
   for (cellIterator i = c.begin(); i != c.end(); ++i)
-    if (i->value != trueSymbol.value)
+    if (i->value == falseSymbol.value)
       return falseSymbol;
   return trueSymbol;
 }
