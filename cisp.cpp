@@ -395,10 +395,14 @@ std::list<std::string> tokenize(const std::string& str)
         while (*s == ' ')
             ++s;
         if (*s == '(' || *s == ')')
-            tokens.push_back(*s++ == '(' ? "(" : ")");
+	    tokens.push_back(*s++ == '(' ? "(" : ")");
+	else if (*s == '\'') {
+	    ++s;
+	    tokens.push_back("'");
+	}
         else {
             const char* t = s;
-            while (*t && *t != ' ' && *t != '(' && *t != ')')
+             while (*t && *t != ' ' && *t != '(' && *t != ')')
                 ++t;
             tokens.push_back(std::string(s, t));
             s = t;
@@ -415,6 +419,14 @@ cell atom(const std::string& token)
     return cell(Symbol, token);
 }
 
+cell quoteForm(const cell& form) {
+  cell c(List);
+  cell quote(Symbol, "quote");
+  c.list.push_back(quote);
+  c.list.push_back(form);
+  return c;
+}
+
 // return the Lisp expression in the given tokens
 cell readFrom(std::list<std::string>& tokens)
 {
@@ -422,9 +434,13 @@ cell readFrom(std::list<std::string>& tokens)
     const std::string token(tokens.front());
     // remove the first token, as it's supposed to be a `(`
     tokens.pop_front();
+
+    // this means this is a quote expression
+    if (token == "'")
+        return quoteForm(readFrom(tokens));
+
     // this must mean it is indeed an expression
     if (token == "(") {
-
         cell c(List);
         // continuously consume tokens until we reach `)` (which means the expression is finished)
         while (tokens.front() != ")")
