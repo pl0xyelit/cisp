@@ -43,7 +43,7 @@ struct cell {
     std::string value;
     std::vector<cell> list;
     procType proc;
-    environment* environment;
+    struct environment* environment;
 
     // initializers
     cell(cellType type = Symbol) : type(type), environment(0) {}
@@ -57,6 +57,8 @@ typedef cells::const_iterator cellIterator;
 const cell falseSymbol(Symbol, "False");
 const cell trueSymbol(Symbol, "True"); // anything that isn't falseSymbol is true
 const cell NIL(Symbol, "NIL");
+const cell spaceSymbol(Symbol, "\\s");
+const cell newlineSymbol(Symbol, "\\n");
 
 
 ////////////////////// environment
@@ -101,6 +103,19 @@ private:
 
 
 ////////////////////// built-in primitive procedures
+
+// Type predicates.
+cell symbolP(const cells& c) {
+    return c[0].type == Symbol ? trueSymbol : falseSymbol;
+}
+
+cell numberP(const cells& c) {
+    return c[0].type == Number ? trueSymbol : falseSymbol;
+}
+
+cell listP(const cells& c) {
+    return c[0].type == List ? trueSymbol : falseSymbol;
+}
 
 cell addition(const cells& c)
 {
@@ -192,6 +207,24 @@ cell lessOrEqualThan(const cells& c)
     return trueSymbol;
 }
 
+cell greaterOrEqualThan(const cells& c)
+{
+    long long n(
+        atol(
+            c[0]
+            .value
+            .c_str()
+        ));
+    for (cellIterator i = c.begin() + 1; i != c.end(); ++i)
+        if (n < atol(i->value.c_str()))
+            return falseSymbol;
+    return trueSymbol;
+}
+
+cell equal(const cells& c) {
+    return c[0].value == c[1].value ? trueSymbol : falseSymbol;
+}
+
 cell length(const cells& c) {
     return cell(Number, stringify(c[0].list.size()));
 }
@@ -225,8 +258,9 @@ cell cons(const cells& c)
 {
     cell result(List);
     result.list.push_back(c[0]);
-    for (cellIterator i = c[1].list.begin(); i != c[1].list.end(); ++i)
-        result.list.push_back(*i);
+   /* for (cellIterator i = c[1].list.begin(); i != c[1].list.end(); i++)
+        result.list.push_back(*i);*/
+    result.list.push_back(c[1]);
     return result;
 }
 
@@ -239,7 +273,11 @@ cell list(const cells& c)
 
 cell display(const cells& c)
 {
-    std::cout << c[0].value << '\n';
+    if (c[0].value == "\\n")
+        std::cout << '\n';
+    else if (c[0].value == "\\s")
+        std::cout << ' ';
+    else std::cout << c[0].value;
     return NIL;
 }
 
@@ -252,6 +290,7 @@ cell exitCode(const cells& c)
 void addGlobals(environment& env)
 {
     env["nil"] = NIL;   env["False"] = falseSymbol;  env["True"] = trueSymbol;
+    env["\\s"] = spaceSymbol; env["\\n"] = newlineSymbol;
     env["display"] = cell(&display); env["exit"] = cell(&exitCode);
     env["append"] = cell(&append);   env["car"] = cell(&car);
     env["cdr"] = cell(&cdr);      env["cons"] = cell(&cons);
@@ -260,6 +299,9 @@ void addGlobals(environment& env)
     env["-"] = cell(&substraction);      env["*"] = cell(&multiplication);
     env["/"] = cell(&division);      env[">"] = cell(&greaterThan);
     env["<"] = cell(&lessThan);     env["<="] = cell(&lessOrEqualThan);
+    env[">="] = cell(&greaterOrEqualThan);
+    env["="] = cell(&equal); env["symbol?"] = cell(&symbolP);
+    env["number?"] = cell(&numberP); env["list?"] = cell(&listP);
 }
 
 
