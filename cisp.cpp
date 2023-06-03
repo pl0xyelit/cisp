@@ -386,14 +386,18 @@ cell eval(cell x, environment* env)
 
 ////////////////////// parse, read and user interaction
 
+// whitespace predicate
+bool whitespace(char c) {
+    return c == ' ' || c == '\n' || c == '\t' || c == '\r' ? 1 : 0; }
+
 // convert given string to list of tokens
 std::list<std::string> tokenize(const std::string& str)
 {
     std::list<std::string> tokens;
     const char* s = str.c_str();
     while (*s) {
-        while (*s == ' ')
-            ++s;
+        while (whitespace(*s))
+             ++s;
         if (*s == '(' || *s == ')')
 	    tokens.push_back(*s++ == '(' ? "(" : ")");
 	else if (*s == '\'') {
@@ -402,7 +406,7 @@ std::list<std::string> tokenize(const std::string& str)
 	}
         else {
             const char* t = s;
-             while (*t && *t != ' ' && *t != '(' && *t != ')')
+            while (*t && *t != ' ' && *t != '(' && *t != ')')
                 ++t;
             tokens.push_back(std::string(s, t));
             s = t;
@@ -488,6 +492,62 @@ std::string toString(const cell& exp)
     return exp.value;
 }
 
+
+///////////////////// fixed parse, read & user interaction
+
+std::string fetch(std::istream& input);
+
+// skip huwitespace
+void skip_white(std::istream& input) {
+    char peek = '\0';
+    input.get(peek);
+    while(whitespace(peek)) {
+        input.get(peek);
+    }
+    input.unget();
+}
+
+// fetch a string from the input stream
+std::string fetch(std::istream& input) {
+    char peek = '\0';
+    std::string string;
+
+    input.get(peek);
+    if (peek == '\'')
+    	return std::string("'") += fetch(input);
+    if (peek == '(') {
+	int depth = 1;
+	string.push_back(peek);
+	input.get(peek);
+	while(depth >= 1) {
+	   if (peek == '(') {
+                   string.push_back(peek);
+                   input.get(peek);
+                   depth += 1;
+	       }
+	   if (peek == ')') {
+	           string.push_back(peek);
+	           input.get(peek);
+	           depth -= 1;
+	       }
+           else {
+                   string.push_back(peek);
+                   input.get(peek);
+               }
+	}
+    }
+    else if (whitespace(peek)) {
+        input.unget();
+        skip_white(input);
+        return fetch(input);
+    }
+    else while (!whitespace(peek) && peek != '(' && peek != ')') {
+        string.push_back(peek);
+        input.get(peek);
+    }
+    return string;
+}
+
 // the default read-eval-print-loop
 void repl(const std::string& prompt, environment* env)
 {
@@ -495,10 +555,10 @@ void repl(const std::string& prompt, environment* env)
         // prints the current prompt after previous instruction is done
         std::cout << prompt;
         // the `read` part of a read-eval-print-loop
-        std::string line;
-        std::getline(std::cin, line);
-        // `eval`, stringify and `print` 
-        std::cout << toString(eval(read(line), env)) << '\n';
+        std::string expr;
+        expr = fetch(std::cin);
+        // `eval`, stringify and `print`
+        std::cout << toString(eval(read(expr), env)) << '\n';
     }
 }
 
@@ -512,7 +572,7 @@ int main()
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
 
-// Tips for Getting Started: 
+// Tips for Getting Started:
 //   1. Use the Solution Explorer window to add/manage files
 //   2. Use the Team Explorer window to connect to source control
 //   3. Use the Output window to see build output and other messages
