@@ -498,7 +498,7 @@ std::string toString(const cell& exp)
 std::string fetch(std::istream& input);
 
 // skip huwitespace
-void skip_white(std::istream& input) {
+void skipWhite(std::istream& input) {
     char peek = '\0';
     input.get(peek);
     while(whitespace(peek)) {
@@ -514,31 +514,31 @@ std::string fetch(std::istream& input) {
 
     input.get(peek);
     if (peek == '\'')
-    	return std::string("'") += fetch(input);
+        return std::string("'") += fetch(input);
     if (peek == '(') {
-	int depth = 1;
-	string.push_back(peek);
-	input.get(peek);
-	while(depth >= 1) {
-	   if (peek == '(') {
-                   string.push_back(peek);
-                   input.get(peek);
-                   depth += 1;
-	       }
-	   if (peek == ')') {
-	           string.push_back(peek);
-	           input.get(peek);
-	           depth -= 1;
-	       }
-           else {
-                   string.push_back(peek);
-                   input.get(peek);
-               }
-	}
+        int depth = 1;
+        string.push_back(peek);
+        input.get(peek);
+        while(depth >= 1) {
+            if (peek == '(') {
+                string.push_back(peek);
+                input.get(peek);
+                depth += 1;
+            }
+            if (peek == ')') {
+                string.push_back(peek);
+                input.get(peek);
+                depth -= 1;
+            }
+            else {
+                string.push_back(peek);
+                input.get(peek);
+            }
+        }
     }
     else if (whitespace(peek)) {
         input.unget();
-        skip_white(input);
+        skipWhite(input);
         return fetch(input);
     }
     else while (!whitespace(peek) && peek != '(' && peek != ')') {
