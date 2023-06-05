@@ -59,7 +59,7 @@ const cell trueSymbol(Symbol, "True"); // anything that isn't falseSymbol is tru
 const cell NIL(Symbol, "NIL");
 const cell spaceSymbol(Symbol, "\\s");
 const cell newlineSymbol(Symbol, "\\n");
-
+const cell whatTheFuck(Symbol, "");
 
 ////////////////////// environment
 
@@ -299,7 +299,7 @@ cell display(const cells& c)
     else if (c[0].value == "\\s")
         std::cout << ' ';
     else std::cout << c[0].value;
-    return NIL;
+    return whatTheFuck;
 }
 
 cell exitCode(const cells& c)
@@ -310,6 +310,7 @@ cell exitCode(const cells& c)
 // define the bare minimum set of primintives necessary to pass the unit tests
 void addGlobals(environment& env)
 {
+    
     env["nil"] = NIL;   env["False"] = falseSymbol;  env["True"] = trueSymbol;
     env["\\s"] = spaceSymbol; env["\\n"] = newlineSymbol;
     env["display"] = cell(&display); env["exit"] = cell(&exitCode);

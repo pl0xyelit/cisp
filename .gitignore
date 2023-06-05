@@ -399,3 +399,5 @@ FodyWeavers.xsd
 
 # random
 *.exe
+*.out
+a.out
