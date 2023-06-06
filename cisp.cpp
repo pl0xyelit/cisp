@@ -1,4 +1,5 @@
-// cisp.cpp 
+// cisp.cpp
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -70,33 +71,33 @@ struct environment {
 
     environment(const cells& parms, const cells& args, environment* outer)
         : outer_(outer)
-    {
-        cellIterator a = args.begin();
-        for (cellIterator p = parms.begin(); p != parms.end(); ++p)
-            env_[p->value] = *a++;
-    }
+	{
+	    cellIterator a = args.begin();
+	    for (cellIterator p = parms.begin(); p != parms.end(); ++p)
+		env_[p->value] = *a++;
+	}
 
     // map a variable name onto a cell
     typedef std::map<std::string, cell> map;
 
     // return a reference to the innermost environment where 'var' appears
     map& find(const std::string& var)
-    {
-        if (env_.find(var) != env_.end())
-            return env_; // the symbol exists in this environment
-        if (outer_)
-            return outer_->find(var); // attempt to find the symbol in some "outer" env
-        std::cout << "unbound symbol '" << var << "'\n";
-        return env_;
-    }
+	{
+	    if (env_.find(var) != env_.end())
+		return env_; // the symbol exists in this environment
+	    if (outer_)
+		return outer_->find(var); // attempt to find the symbol in some "outer" env
+	    std::cout << "unbound symbol '" << var << "'\n";
+	    return env_;
+	}
 
     // return a reference to the cell associated with the given symbol 'var'
     cell& operator[] (const std::string& var)
-    {
-        return env_[var];
-    }
+	{
+	    return env_[var];
+	}
 
-private:
+    private:
     map env_; // inner symbol->cell mapping
     environment* outer_; // next adjacent outer env, or 0 if there are no further environments
 };
@@ -136,9 +137,9 @@ cell substraction(const cells& c)
 {
     long long n(
         atol(c[0]
-            .value
-            .c_str()
-        ));
+	     .value
+	     .c_str()
+	    ));
     for (cellIterator i = c.begin() + 1; i != c.end(); ++i)
         n -= atol(i->value.c_str());
     return cell(Number, stringify(n));
@@ -166,24 +167,24 @@ cell division(const cells& c)
 }
 
 cell logicOr(const cells& c) {
-  for (cellIterator i = c.begin(); i != c.end(); ++i)
-    if (i->value != falseSymbol.value)
-      return trueSymbol;
-  return falseSymbol;
+    for (cellIterator i = c.begin(); i != c.end(); ++i)
+	if (i->value != falseSymbol.value)
+	    return trueSymbol;
+    return falseSymbol;
 }
 
 cell logicAnd(const cells& c) {
-  for (cellIterator i = c.begin(); i != c.end(); ++i)
-    if (i->value == falseSymbol.value)
-      return falseSymbol;
-  return trueSymbol;
+    for (cellIterator i = c.begin(); i != c.end(); ++i)
+	if (i->value == falseSymbol.value)
+	    return falseSymbol;
+    return trueSymbol;
 }
 
 cell logicNot(const cells& c) {
-  if (c[0].value == falseSymbol.value)
-    return trueSymbol;
-  else
-    return falseSymbol;
+    if (c[0].value == falseSymbol.value)
+	return trueSymbol;
+    else
+	return falseSymbol;
 }
 
 cell greaterThan(const cells& c)
@@ -193,7 +194,7 @@ cell greaterThan(const cells& c)
             c[0]
             .value
             .c_str()
-    ));
+	));
     for (cellIterator i = c.begin() + 1; i != c.end(); ++i)
         if (n <= atol(i->value.c_str()))
             return falseSymbol;
@@ -279,8 +280,8 @@ cell cons(const cells& c)
 {
     cell result(List);
     result.list.push_back(c[0]);
-   /* for (cellIterator i = c[1].list.begin(); i != c[1].list.end(); i++)
-        result.list.push_back(*i);*/
+    /* for (cellIterator i = c[1].list.begin(); i != c[1].list.end(); i++)
+       result.list.push_back(*i);*/
     result.list.push_back(c[1]);
     return result;
 }
@@ -331,6 +332,8 @@ void addGlobals(environment& env)
 
 ////////////////////// eval
 
+void loadFile(const std::string& name, environment* env);
+
 cell eval(cell x, environment* env)
 {
     if (x.type == Symbol)
@@ -361,6 +364,19 @@ cell eval(cell x, environment* env)
                 eval(x.list[i], env);
             return eval(x.list[x.list.size() - 1], env);
         }
+	if (x.list[0].value == "load") {      // (load file-symbol)
+	    if (x.list.size() == 2) {
+		cell name = eval(x.list[1], env);
+		if (name.value == "nil")
+		    return falseSymbol;
+		else {
+		    loadFile(name.value, env);
+		    return trueSymbol;
+		}
+	    }
+	    else
+		return falseSymbol;
+	}
     }
     // (proc exp*)
     cell proc(eval(x.list[0], env));
@@ -398,7 +414,7 @@ std::list<std::string> tokenize(const std::string& str)
     const char* s = str.c_str();
     while (*s) {
         while (whitespace(*s))
-             ++s;
+	    ++s;
         if (*s == '(' || *s == ')')
 	    tokens.push_back(*s++ == '(' ? "(" : ")");
 	else if (*s == '\'') {
@@ -425,11 +441,11 @@ cell atom(const std::string& token)
 }
 
 cell quoteForm(const cell& form) {
-  cell c(List);
-  cell quote(Symbol, "quote");
-  c.list.push_back(quote);
-  c.list.push_back(form);
-  return c;
+	cell c(List);
+	cell quote(Symbol, "quote");
+	c.list.push_back(quote);
+	c.list.push_back(form);
+	return c;
 }
 
 // return the Lisp expression in the given tokens
@@ -455,6 +471,8 @@ cell readFrom(std::list<std::string>& tokens)
         tokens.pop_front();
         return c;
     }
+    if (token == "")
+      return falseSymbol;
     // no `(`, it might be an atom, be it a number or a symbol
     else
         return atom(token);
@@ -502,9 +520,8 @@ std::string fetch(std::istream& input);
 void skipWhite(std::istream& input) {
     char peek = '\0';
     input.get(peek);
-    while(whitespace(peek)) {
+    while(whitespace(peek))
         input.get(peek);
-    }
     input.unget();
 }
 
@@ -547,6 +564,26 @@ std::string fetch(std::istream& input) {
         input.get(peek);
     }
     return string;
+}
+
+// read a file
+std::string readFile(const std::string& name) {
+	std::ifstream input(name);
+	std::stringstream buffer;
+	buffer << input.rdbuf();
+	input.close();
+	std::string output = buffer.str();
+	return output;
+}
+
+// load a file
+void loadFile(const std::string& name, environment* env) {
+	std::string data = readFile(name);
+	std::list<std::string> tokens = tokenize(data);
+	while (!tokens.empty()) {
+	    cell object = readFrom(tokens);
+	    eval(object, env);
+	}
 }
 
 // the default read-eval-print-loop
